@@ -4,10 +4,10 @@ config.py
 """
 
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
-    username="user",
-    password="pass",
-    hostname="hostm",
-    databasename="db"
+    username="mediabias",
+    password="Tools4bias*Detection",
+    hostname="mediabias.mysql.pythonanywhere-services.com",
+    databasename="mediabias$survey"
 )
 
 class BaseConfig(object):

@@ -2,7 +2,7 @@ import csv
 import sys
 import pandas as pd
 
-from surveyapi.models import db, Survey, Question, AnnotationSentences, SimpleChoice, RangeSliderChoice, SurveyGroups, TestSurveyGroups, TestAnnotationSentences, TestAnnotations, SurveyRecord, Annotations
+from surveyapi.models import db, Survey, Question, AnnotationSentences, SimpleChoice, RangeSliderChoice, TestSurveyGroups, SurveyRecord, Annotations
 from surveyapi.create_app import create_app
 from prettytable import PrettyTable
 from sqlalchemy import text
@@ -11,10 +11,10 @@ from pprint import pprint
 from collections import OrderedDict
 
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
-    username="user",
-    password="pass@vv",
-    hostname="host",
-    databasename="db"
+    username="mediabias",
+    password="Tools4bias*Detection",
+    hostname="mediabias.mysql.pythonanywhere-services.com",
+    databasename="mediabias$survey"
 )
 
 MAX_QUOTA = 10
@@ -30,7 +30,7 @@ def get_empty_annotations(db, ctx, after_date='2000-10-10 00:00:00'):
     ctx.push()
     count = 0
     sql_str = """
-        SELECT identifier_key, survey_record_id, sentence_group_id, survey_record.created_at, COUNT(*) as count
+        SELECT identifier_key, survey_record_id, survey_record.created_at, COUNT(*) as count
         FROM survey_annotations
         INNER JOIN survey_record ON survey_record.id = survey_annotations.survey_record_id
         WHERE survey_record.created_at > '""" + after_date + """'
@@ -90,14 +90,14 @@ def get_annotation_status(db, ctx, after_date='2000-10-10 00:00:00'):
 def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
     ctx.push()
     with open('detailed_user_record_mturk_{}.csv'.format(after_date), mode='w') as csv_file:
-        fieldnames = ['id', 'mturk_id', 'age', 'gender', 'education', 'native_english_speaker', 'political_ideology', 'followed_news_outlets', 'news_check_frequency', 'survey_completed']
+        fieldnames = ['id', 'prolific_id', 'created_at', 'age', 'gender', 'education', 'native_english_speaker', 'political_ideology', 'followed_news_outlets', 'news_check_frequency', 'group_id', 'quiz_first', 'quiz_second', 'biased_article', 'bias_facts', 'bias_detection', 'tool_article_ideology', 'scientific_research', 'chart', 'video', 'annotation', 'extended_annotation']
         t = PrettyTable(fieldnames)
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
         # First, get all worker status
         sql_str = """
-            SELECT identifier_key, survey_record_id, sentence_group_id, survey_record.created_at, COUNT(*) as count
+            SELECT identifier_key, survey_record_id, survey_record.created_at, COUNT(*) as count
             FROM survey_annotations
             INNER JOIN survey_record ON survey_record.id = survey_annotations.survey_record_id
             WHERE survey_record.created_at > '""" + after_date + """'
@@ -107,34 +107,42 @@ def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
         sql = text(sql_str)
         for row in db.session.execute(sql):
             survey_record_id = dict(row)['survey_record_id']
-            annotation_count = dict(row)['count']
 
             # Then, get the detailed records for each id
             sql_str_2 = """
-                SELECT identifier_key, age, gender, education, political_ideology, native_english_speaker, followed_news_outlets, news_check_frequency, demographics.survey_record_id
+                SELECT identifier_key, demographics.created_at, age, gender, education, political_ideology, native_english_speaker, followed_news_outlets, news_check_frequency, group_id, quiz_first, quiz_second, biased_article, bias_facts, bias_detection, tool_article_ideology, scientific_research, chart, video, annotation, extended_annotation, demographics.survey_record_id
                 FROM demographics
                 INNER JOIN ideologies on demographics.survey_record_id = ideologies.survey_record_id
                 INNER JOIN survey_record on survey_record.id=ideologies.survey_record_id
+                INNER JOIN tool on demographics.survey_record_id = tool.survey_record_id
+                INNER JOIN scientific_research on demographics.survey_record_id = scientific_research.survey_record_id
+                INNER JOIN debriefing on demographics.survey_record_id = debriefing.survey_record_id
                 WHERE survey_record.id = '""" + survey_record_id + """'
                 ;
                 """
             sql_2 = text(sql_str_2)
 
-            # selection = "select identifier_key, age, gender, education, political_ideology, native_english_speaker, followed_news_outlets, news_check_frequency, demographics.survey_record_id "
-            # from_stm = "from demographics "
-            # joins = "inner join ideologies on demographics.survey_record_id = ideologies.survey_record_id inner join survey_record on survey_record.id=ideologies.survey_record_id "
-            # whr = "where survey_record.id='"
-            # sql_str_2 = selection + from_stm + joins + whr + survey_record_id + "'"
-            # sql_2 = text(sql_str_2)
-
             result_2 = db.session.execute(sql_2)
             for row_2 in result_2:
                 record = dict(row_2)
-                mturk_id = record['identifier_key']
+                prolific_id = record['identifier_key']
+                created_at = record['created_at']
                 age = record['age']
                 gender = SimpleChoice.query.get(record['gender']).to_dict()['text']
                 education = SimpleChoice.query.get(record['education']).to_dict()['text']
                 native_english_speaker = SimpleChoice.query.get(record['native_english_speaker']).to_dict()['text']
+                group_id = record['group_id']
+                quiz_first = SimpleChoice.query.get(record['quiz_first']).to_dict()['text']
+                quiz_second = SimpleChoice.query.get(record['quiz_second']).to_dict()['text']
+                biased_article = SimpleChoice.query.get(record['biased_article']).to_dict()['text']
+                bias_facts = SimpleChoice.query.get(record['bias_facts']).to_dict()['text']
+                bias_detection = SimpleChoice.query.get(record['bias_detection']).to_dict()['text']
+                tool_article_ideology = record['tool_article_ideology']
+                scientific_research = SimpleChoice.query.get(record['scientific_research']).to_dict()['text']
+                chart = SimpleChoice.query.get(record['chart']).to_dict()['text']
+                video = SimpleChoice.query.get(record['video']).to_dict()['text']
+                annotation = SimpleChoice.query.get(record['annotation']).to_dict()['text']
+                extended_annotation = SimpleChoice.query.get(record['extended_annotation']).to_dict()['text']
                 political_ideology = record['political_ideology']
                 followed_news_outlets = record['followed_news_outlets'].split(',')
                 converted_news_outlets = []
@@ -145,13 +153,13 @@ def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
                     else:
                         converted_news_outlets.append(outlet)
                 news_check_frequency = SimpleChoice.query.get(record['news_check_frequency']).to_dict()['text']
-                survey_completed = annotation_count >= 20
 
-                t.add_row([survey_record_id, mturk_id, age, gender, education, native_english_speaker, political_ideology, converted_news_outlets, news_check_frequency, survey_completed ])
+                t.add_row([survey_record_id, prolific_id, created_at, age, gender, education, native_english_speaker, political_ideology, converted_news_outlets, news_check_frequency, group_id, quiz_first, quiz_second, biased_article, bias_facts, bias_detection, tool_article_ideology, scientific_research, chart, video, annotation, extended_annotation])
 
                 writer.writerow({
                     'id': survey_record_id,
-                    'mturk_id': mturk_id,
+                    'prolific_id': prolific_id,
+                    'created_at' : created_at,
                     'age': age,
                     'gender': gender,
                     'education': education,
@@ -159,7 +167,18 @@ def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
                     'political_ideology': political_ideology,
                     'followed_news_outlets': converted_news_outlets,
                     'news_check_frequency': news_check_frequency,
-                    'survey_completed': survey_completed
+                    'group_id': group_id,
+                    'biased_article': biased_article,
+                    'bias_facts': bias_facts,
+                    'bias_detection': bias_detection,
+                    'tool_article_ideology': tool_article_ideology,
+                    'quiz_first': quiz_first,
+                    'quiz_second': quiz_second,
+                    'scientific_research': scientific_research,
+                    'chart': chart,
+                    'video': video,
+                    'annotation': annotation,
+                    'extended_annotation': extended_annotation
                 })
 
         print('csv generated...')
@@ -168,14 +187,14 @@ def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
 
 def to_csv_all_annotations(db, ctx, after_date='2000-10-10 00:00:00'):
     ctx.push()
-    fieldnames = ['survey_record_id', 'sentence_id', 'sentence_group_id', 'created_at', 'label', 'words', 'factual']
+    fieldnames = ['survey_record_id', 'created_at', 'words', 'group_id', 'quiz_left_high', 'quiz_left_middle', 'quiz_left_low', 'quiz_right_high', 'quiz_right_middle', 'quiz_right_low', 'quiz_center_high', 'quiz_center_middle', 'quiz_center_low', 'annotation_biased_article', 'annotation_bias_detection', 'annotation_bias_facts', 'annotation_tool_article_ideology', 'political']
     t = PrettyTable(fieldnames)
     with open('annotations_mturk_{}.csv'.format(after_date), mode='w') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
         count = 0
         sql_str = """
-            SELECT survey_record_id, created_at, label, words, factual, sentence_group_id, annotation_sentence_id
+            SELECT survey_record_id, created_at, words, group_id, quiz_left_high, quiz_left_middle, quiz_left_low, quiz_right_high, quiz_right_middle, quiz_right_low, quiz_center_high, quiz_center_middle, quiz_center_low, annotation_biased_article, annotation_bias_detection, annotation_bias_facts, annotation_tool_article_ideology, political
             FROM survey_annotations
             WHERE created_at > '""" + after_date + """'
             ORDER BY created_at;
@@ -186,23 +205,45 @@ def to_csv_all_annotations(db, ctx, after_date='2000-10-10 00:00:00'):
             record = dict(row)
             survey_record_id = record['survey_record_id']
             created_at = record['created_at']
-            label = SimpleChoice.query.get(record['label']).to_dict()['text']
             words = record['words']
-            factual = SimpleChoice.query.get(record['factual']).to_dict()['text']
-            sentence_group_id = record['sentence_group_id']
-            sentence_id = record['annotation_sentence_id']
+            group_id = record['group_id']
+            quiz_left_high = SimpleChoice.query.get(record['quiz_left_high']).to_dict()['text']
+            quiz_left_middle = SimpleChoice.query.get(record['quiz_left_middle']).to_dict()['text']
+            quiz_left_low = SimpleChoice.query.get(record['quiz_left_low']).to_dict()['text']
+            quiz_right_high = SimpleChoice.query.get(record['quiz_right_high']).to_dict()['text']
+            quiz_right_middle = SimpleChoice.query.get(record['quiz_right_middle']).to_dict()['text']
+            quiz_right_low = SimpleChoice.query.get(record['quiz_right_low']).to_dict()['text']
+            quiz_center_high = SimpleChoice.query.get(record['quiz_center_high']).to_dict()['text']
+            quiz_center_middle = SimpleChoice.query.get(record['quiz_center_middle']).to_dict()['text']
+            quiz_center_low = SimpleChoice.query.get(record['quiz_center_low']).to_dict()['text']
+            annotation_biased_article = SimpleChoice.query.get(record['annotation_biased_article']).to_dict()['text']
+            annotation_bias_facts = SimpleChoice.query.get(record['annotation_bias_facts']).to_dict()['text']
+            annotation_bias_detection = SimpleChoice.query.get(record['annotation_bias_detection']).to_dict()['text']
+            annotation_tool_article_ideology = record['annotation_tool_article_ideology']
+            political = record['political']
 
             writer.writerow({
                 'survey_record_id': survey_record_id,
-                'sentence_id': sentence_id,
-                'sentence_group_id': sentence_group_id,
                 'created_at': created_at,
-                'label': label,
                 'words': words,
-                'factual': factual
+                'group_id': group_id,
+                'annotation_biased_article': annotation_biased_article,
+                'annotation_bias_facts': annotation_bias_facts,
+                'annotation_bias_detection': annotation_bias_detection,
+                'annotation_tool_article_ideology': annotation_tool_article_ideology,
+                'quiz_left_high': quiz_left_high,
+                'quiz_left_middle': quiz_left_middle,
+                'quiz_left_low': quiz_left_low,
+                'quiz_right_high': quiz_right_high,
+                'quiz_right_middle': quiz_right_middle,
+                'quiz_right_low': quiz_right_low,
+                'quiz_center_high': quiz_center_high,
+                'quiz_center_middle': quiz_center_middle,
+                'quiz_center_low': quiz_center_low,
+                'political' : political
             })
             count += 1
-            t.add_row([survey_record_id, sentence_id, sentence_group_id, created_at, label, words, factual])
+            t.add_row([survey_record_id, created_at, words, group_id, quiz_left_high, quiz_left_middle, quiz_left_low, quiz_right_high, quiz_right_middle, quiz_right_low, quiz_center_high, quiz_center_middle, quiz_center_low, annotation_biased_article, annotation_bias_detection, annotation_bias_facts, annotation_tool_article_ideology, political])
         print('csv generated...')
         # print(t)
         print("\n{} results. ".format(count))

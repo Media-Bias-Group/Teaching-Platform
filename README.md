@@ -1,31 +1,31 @@
-# TASSY— A Text Annotation Survey System 
+# TASSY— A Text Annotation Survey System
 
-TASSY is a web-based survey application built using Flask and Vue.js. The app allows combining classic survey functionality, such as posing single-choice, multiple-choice, and slider questions, with text annotation functionality, i.e., allowing participants to select and annotate words or phrases in a provided text. 
+TASSY is a web-based survey application built using Flask and Vue.js. The app allows combining classic survey functionality, such as posing single-choice, multiple-choice, and slider questions, with text annotation functionality, i.e., allowing participants to select and annotate words or phrases in a provided text.
 
 ## Demo
 
-http://tassy.blind-review.org
+https://mediabias.pythonanywhere.com/
 
 **Note**: In some browsers, disabling third-party cookies prevents the applications from runnig. Please enable cookies if you experience problems.
 
 ## To run the application locally
 
-1) Resolve all dependencies in requirements.txt.
-2) Set up a local flask server.
-3) Add this line `app.run(0.0.0.0)` at the end of the file `flask_app.py`.
-4) Configure a local MySQL or SQLite server and make the appropriate changes in `surveyapi.models.db` to get the database up and running.
+1. Resolve all dependencies in requirements.txt.
+2. Set up a local flask server.
+3. Add this line `app.run(0.0.0.0)` at the end of the file `flask_app.py`.
+4. Configure a local MySQL or SQLite server and make the appropriate changes in `surveyapi.models.db` to get the database up and running.
 
 ## Application structure and hierarchies
 
 - Models for basic survey questions, such as single-choice and multiple-choice questions, chips select, range sliders, and text highlights already exist in `surveyapi.models`
 - To create new models, please perform the appropriate DB migrations as per the configuration of your flask and database servers.
 - The following models (and corresponding tables) exist in the survey and can be used out-of-the-box:
-> 1. **SurveyRecord**: Holds the parent object generated from a perticipant’s responses, such as *DataConsent*, *Demographics*, *Ideologies* and *QualityControl*.
-> 2. **SurveyGroups**: Groups the sentences that are to be annotated. It also holds the max quota variable of the groups.
-> 3. **Survey**: Container for various types of surveys, such as demographics, ideologies etc.
-> 4. **Question**: Holds a survey question. It can be specified with the type of response the question should hold.
-> 3. **AnnotationSentences**: Actual sentences that are to be annotated. Also holds other properties, such as publication, URLs, etc.
-> 4. **Annotations**: Holds the words/phrases highlighted/annotated by the participants.
+  > 1. **SurveyRecord**: Holds the parent object generated from a perticipant’s responses, such as _DataConsent_, _Demographics_, _Ideologies_ and _QualityControl_.
+  > 2. **SurveyGroups**: Groups the sentences that are to be annotated. It also holds the max quota variable of the groups.
+  > 3. **Survey**: Container for various types of surveys, such as demographics, ideologies etc.
+  > 4. **Question**: Holds a survey question. It can be specified with the type of response the question should hold.
+  > 5. **AnnotationSentences**: Actual sentences that are to be annotated. Also holds other properties, such as publication, URLs, etc.
+  > 6. **Annotations**: Holds the words/phrases highlighted/annotated by the participants.
 
 File seeder.py serves to seed and populate the platform database with questions etc.
 
@@ -50,7 +50,6 @@ survey.questions = questions
 db.session.add(survey)
 db.session.commit()
 ```
-
 
 ## Creating a simple ideological question with a range slider input
 
@@ -110,13 +109,12 @@ The function expects a CSV file such as the following https://github.com/Media-B
 
 ## Seeding survey questions
 
-In the file seeder.py, use the functions 
+In the file seeder.py, use the functions
 
 1. `seed_personal_questions()`
 2. `seed_ideology_questions()`
 3. `seed_annotation_questions()`
 4. `create_groups()`
-
 
 ## Extracting the survey output
 
@@ -124,7 +122,7 @@ The output is extracted in CSV format. Use the command below to open the interac
 
 `python -i db_helper.py`
 
-Get the db 
+Get the db
 `db, ctx = create_db_client()`
 
 Get all the survey worker records as CSV
@@ -133,7 +131,12 @@ Get all the survey worker records as CSV
 Get all the survey annotations as CSV
 `to_csv_all_annotations(db, ctx, after_date=optional)`
 
-
-------
+---
 
 Feel free to come forward with any questions or extend/improve the tool. Just contact us.
+
+## How to modify the briefing section?
+
+## How to modify the demographic section?
+
+## How to modify the political section?

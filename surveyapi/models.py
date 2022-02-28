@@ -28,6 +28,7 @@ class SurveyRecord(db.Model):
     data_consent = db.relationship('DataConsent', backref="survey_record", lazy=False)
     demographics = db.relationship('Demographics', backref="survey_record", lazy=False)
     ideologies = db.relationship('Ideologies', backref="survey_record", lazy=False)
+    tool = db.relationship('ToolRating', backref="survey_record", lazy=False)
     quality_control = db.relationship('QualityControl', backref="survey_record", lazy=False)
 
     def to_dict(self):
@@ -73,6 +74,56 @@ class Demographics(db.Model):
                            education=self.education,
                            native_english_speaker=self.native_english_speaker)
 
+class Debriefing(db.Model):
+    __tablename__ = 'debriefing'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    chart = db.Column(db.Integer, nullable=False)
+    video = db.Column(db.Integer, nullable=False)
+    annotation = db.Column(db.Integer, nullable=False)
+    extended_annotation = db.Column(db.Integer, nullable=False)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           survey_record_id=self.survey_record_id,
+                           chart=self.chart,
+                           video=self.video,
+                           annotation=self.annotation,
+                           extended_annotation=self.extended_annotation)
+
+class ScientificResearch(db.Model):
+    __tablename__ = 'scientific_research'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    scientific_research = db.Column(db.Integer, nullable=False)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           survey_record_id=self.survey_record_id,
+                           scientific_research=self.scientific_research)
+
+class ToolRating(db.Model):
+    __tablename__ = 'tool'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group_id = db.Column(db.Integer, nullable=False)
+    quiz_first = db.Column(db.Text, nullable=True)
+    quiz_second = db.Column(db.Text, nullable=True)
+    biased_article = db.Column(db.Integer, nullable=False)
+    bias_detection = db.Column(db.Integer, nullable=False)
+    bias_facts = db.Column(db.Integer, nullable=False)
+    tool_article_ideology = db.Column(db.Integer, nullable=False)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           survey_record_id=self.survey_record_id,
+                           group_id=self.group_id,
+                           quiz_first=self.quiz_first,
+                           quiz_second=self.quiz_second,
+                           biased_article=self.biased_article,
+                           bias_detection=self.bias_detection,
+                           bias_facts=self.bias_facts,
+                           tool_article_ideology=self.tool_article_ideology)
 
 class Ideologies(db.Model):
     __tablename__ = 'ideologies'
@@ -106,8 +157,8 @@ class QualityControl(db.Model):
                            passed=self.passed)
 
 
-class SurveyGroups(db.Model):
-    __tablename__ = 'survey_groups'
+class ToolGroups(db.Model):
+    __tablename__ = 'tool_groups'
     id = db.Column(db.Integer, primary_key=True)
     max_quota = db.Column(db.Integer, nullable=False)
     remaining_quota = db.Column(db.Integer, nullable=False)
@@ -119,28 +170,148 @@ class SurveyGroups(db.Model):
                            remaining_quota=self.remaining_quota,
                            created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'))
 
-
-class AnnotationSentences(db.Model):
-    __tablename__ = 'annotation_sentences'
-    id = db.Column(db.String(150), primary_key=True)
+class AnnotationGroups(db.Model):
+    __tablename__ = 'annotation_groups'
+    id = db.Column(db.Integer, primary_key=True)
+    max_quota = db.Column(db.Integer, nullable=False)
+    remaining_quota = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    text = db.Column(db.Text, nullable=False)
-    link = db.Column(db.Text, nullable=False)
-    type = db.Column(db.String(100), nullable=False)
-    topic = db.Column(db.String(100), nullable=False)
-    outlet = db.Column(db.String(100), nullable=False)
-    group_id = db.Column(db.Integer, db.ForeignKey('survey_groups.id'))
 
     def to_dict(self):
         return OrderedDict(id=self.id,
-                           created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                           text=self.text,
-                           link=self.link,
-                           type=self.type,
-                           topic=self.topic,
-                           outlet=self.outlet,
-                           group_id=self.group_id)
+                           max_quota=self.max_quota,
+                           remaining_quota=self.remaining_quota,
+                           created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'))
 
+class TestQuestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    test_question = db.Column(db.Text, nullable=False)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           test_question=self.test_question,
+                           created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'))
+
+class Groups(db.Model):
+    __tablename__ = 'groups'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class AGroups(db.Model):
+    __tablename__ = 'aGroups'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class FirstGroup(db.Model):
+    __tablename__ = '1Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class SecondGroup(db.Model):
+    __tablename__ = '2Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class ThirdGroup(db.Model):
+    __tablename__ = '3Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class FourthGroup(db.Model):
+    __tablename__ = '4Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class FifthGroup(db.Model):
+    __tablename__ = '5Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class SixthGroup(db.Model):
+    __tablename__ = '6Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class SeventhGroup(db.Model):
+    __tablename__ = '7Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class EighthGroup(db.Model):
+    __tablename__ = '8Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class NinthGroup(db.Model):
+    __tablename__ = '9Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
+
+class TenthGroup(db.Model):
+    __tablename__ = '10Group'
+    id = db.Column(db.Integer, primary_key=True)
+    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
+    group = db.Column(db.Integer)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           group=self.group)
 
 class TestSurveyGroups(db.Model):
     __tablename__ = 'test_survey_groups'
@@ -155,71 +326,88 @@ class TestSurveyGroups(db.Model):
                            remaining_quota=self.remaining_quota,
                            created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'))
 
-
-class TestAnnotationSentences(db.Model):
-    __tablename__ = 'test_annotation_sentences'
+class AnnotationSentences(db.Model):
+    __tablename__ = 'annotation_sentences'
     id = db.Column(db.String(150), primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    headline = db.Column(db.Text, nullable=False)
     text = db.Column(db.Text, nullable=False)
-    link = db.Column(db.Text, nullable=False)
-    type = db.Column(db.String(100), nullable=False)
-    topic = db.Column(db.String(100), nullable=False)
-    outlet = db.Column(db.String(100), nullable=False)
-    group_id = db.Column(db.Integer, db.ForeignKey('test_survey_groups.id'))
+    tool = db.Column(db.Text, nullable=False)
+    extra= db.Column(db.Text, nullable=True)
+    quiz_id = db.Column(db.Text, nullable=False)
+    group_id = db.Column(db.Integer, nullable=False)
+
+    def to_dict(self):
+        return OrderedDict(id=self.id,
+                           created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                           headline=self.headline,
+                           text=self.text,
+                           tool=self.tool,
+                           extra=self.extra,
+                           quiz_id=self.quiz_id,
+                           group_id=self.group_id)
+
+class Articles(db.Model):
+    __tablename__ = 'annotation'
+    id = db.Column(db.String(150), primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    headline = db.Column(db.Text, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    political = db.Column(db.Text, nullable=False)
+    quiz_id = db.Column(db.Text, nullable=False)
+    group_id = db.Column(db.Integer, nullable=False)
 
     def to_dict(self):
         return OrderedDict(id=self.id,
                            created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                            text=self.text,
-                           link=self.link,
-                           type=self.type,
-                           topic=self.topic,
-                           outlet=self.outlet,
+                           headline=self.headline,
+                           quiz_id=self.quiz_id,
+                           political=self.political,
                            group_id=self.group_id)
-
 
 class Annotations(db.Model):
     __tablename__ = 'survey_annotations'
     id = db.Column(db.String(150), primary_key=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
-    annotation_sentence_id = db.Column(db.String(150), db.ForeignKey('annotation_sentences.id'))
-    sentence_group_id = db.Column(db.Integer, db.ForeignKey('survey_groups.id'))
-    label = db.Column(db.Integer, nullable=False)
+    quiz_left_high = db.Column(db.Text, nullable=True)
+    quiz_left_middle = db.Column(db.Text, nullable=True)
+    quiz_left_low = db.Column(db.Text, nullable=True)
+    quiz_right_high = db.Column(db.Text, nullable=True)
+    quiz_right_middle = db.Column(db.Text, nullable=True)
+    quiz_right_low = db.Column(db.Text, nullable=True)
+    quiz_center_high = db.Column(db.Text, nullable=True)
+    quiz_center_middle = db.Column(db.Text, nullable=True)
+    quiz_center_low = db.Column(db.Text, nullable=True)
+    annotation_biased_article = db.Column(db.Integer, nullable=False)
+    annotation_bias_detection = db.Column(db.Integer, nullable=False)
+    annotation_bias_facts = db.Column(db.Integer, nullable=False)
+    annotation_tool_article_ideology = db.Column(db.Integer, nullable=False)
     words = db.Column(db.Text, nullable=False)
-    factual = db.Column(db.Integer, nullable=False)
+    political = db.Column(db.Text, nullable=False)
+    group_id = db.Column(db.Integer, nullable=False)
 
     def to_dict(self):
         return OrderedDict(id=self.id,
                            created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                            survey_record_id=self.survey_record_id,
-                           annotation_sentence_id=self.annotation_sentence_id,
-                           label=self.label,
+                           quiz_left_high=self.quiz_left_high,
+                           quiz_left_middle=self.quiz_left_middle,
+                           quiz_left_low=self.quiz_left_low,
+                           quiz_right_high=self.quiz_right_high,
+                           quiz_right_middle=self.quiz_right_middle,
+                           quiz_right_low=self.quiz_right_low,
+                           quiz_center_high=self.quiz_center_high,
+                           quiz_center_middle=self.quiz_center_middle,
+                           quiz_center_low=self.quiz_center_low,
+                           annotation_biased_article=self.annotation_biased_article,
+                           annotation_bias_detection=self.annotation_bias_detection,
+                           annotation_bias_facts=self.annotation_bias_facts,
+                           annotation_tool_article_ideology=self.annotation_tool_article_ideology,
                            words=self.words,
-                           sentence_group_id=self.sentence_group_id,
-                           factual=self.factual)
-
-
-class TestAnnotations(db.Model):
-    __tablename__ = 'test_survey_annotations'
-    id = db.Column(db.String(150), primary_key=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    survey_record_id = db.Column(db.String(150), db.ForeignKey('survey_record.id'))
-    annotation_sentence_id = db.Column(db.String(150), db.ForeignKey('test_annotation_sentences.id'))
-    sentence_group_id = db.Column(db.Integer, db.ForeignKey('test_survey_groups.id'))
-    label = db.Column(db.Integer, nullable=False)
-    words = db.Column(db.Text, nullable=False)
-    factual = db.Column(db.Integer, nullable=False)
-
-    def to_dict(self):
-        return OrderedDict(id=self.id,
-                           created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                           survey_record_id=self.survey_record_id,
-                           annotation_sentence_id=self.annotation_sentence_id,
-                           label=self.label,
-                           words=self.words,
-                           factual=self.factual)
-
+                           political = self.political,
+                           group_id=self.group_id)
 
 class Survey(db.Model):
     __tablename__ = 'surveys'
@@ -261,7 +449,7 @@ class Question(db.Model):
 class SimpleChoice(db.Model):
     __tablename__ = 'simple_choices'
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(100), nullable=False)
+    text = db.Column(db.String(250), nullable=False)
     selected = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'))
@@ -292,3 +480,4 @@ class RangeSliderChoice(db.Model):
                            label_right_side=self.label_right_side,
                            created_at=self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                            question_id=self.question_id)
+
