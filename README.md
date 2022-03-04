@@ -26,7 +26,7 @@ Next, navigate to the databases tab. For the teaching platform you will need a M
 ### 4. Run your code
 
 After setting up everything the flask app and the seeder.py can be run for the first time. To do so navigate back to your flask_app.py, open the file and click on run in the upper right corner. This will start a console that can again be closed after it finished. Then navigate to the seeder.py file that is also stored in your api folder. Scroll down to the last function on line 615. The # comment out the actual code that needs to be run. Therefore first run the seeder.py with the first two function and comment out all other as you can see in the following picture:
-![Seeder File] (readme-assets\Seeder File.png).
+![Seeder File] (https://github.com/Media-Bias-Group/Teaching-Platform/blob/main/readme-assets/Seeder%20File.png).
 Run the file, exit the console, comment on the first two functions by adding a # and delete the # from the following two functions. After that run the code again and follow these steps until the each function was covered.
 
 ### 5. Last steps
@@ -40,11 +40,11 @@ Because the system lives from the different surveys that can be made with it, it
 ### General question setup
 
 All questions that are loaded in the teaching platform are stored in the seeder.py. The teaching platform can contain single-choice and multiple-choice questions, text fields, range sliders and attention checks (depends on the implementation of the section). The first thing that can be adjusted in this file is the number of groups for the tool and annotation section. This cann be changed in the NUM_OF_GROUPS_TOOL and NUM_OF_GROUPS_ANNOTATION variable which are currently set to ten for the tool and nine for the annotation group. To also enable the correct drawing of the groups the needed groups must have a database in the models.py where the id can be stored. The api.py must also be altered. The api call that posts to /article/ contains an if query that puts the records into the correct database. the *_get_available_groups_for_annotation* function also contains this query that needs to be adjusted if more ore less groups will be implemented. In line 437 of the api.py the number from length % must be altered to the number the annotation groups contain. Generally this means that for each group of the tool section a database like the FirstGroup database needs to be added to the models.py and the if queries of the api.py must be lenghtend or shortend according to the amount of available groups. 
-![First Group] (readme-assets\First.png).
+![First Group] (https://github.com/Media-Bias-Group/Teaching-Platform/blob/main/readme-assets/First.png).
 Lengthening can be achieved by simply copying the elif sections underneath the last elif part and adjusting the last else section that will be used if no query is correct.
-![Copy Section] (readme-assets\Copy.png).
+![Copy Section] (https://github.com/Media-Bias-Group/Teaching-Platform/blob/main/readme-assets/Copy.png).
 Shortening can be achieved by deleting one of the elif parts and again adjusting the last query to get a default that will be triggered.
-![Delete Section] (readme-assets\Delete.png).
+![Delete Section] (https://github.com/Media-Bias-Group/Teaching-Platform/blob/main/readme-assets/Delete.png).
  Each section of the teaching platform is covered by a unique python function which contains the questions. The questions are always stored with the text, type and the internal name as well as the possible answers that can be given and are later stored in connected databases. To get these databases the models.py in the surveyapi folder contains the setup for the storage where each answer and internal name gets mapped for further use. In order to fill these databases the previously mentioned JavaScript file contains the code that filles the internal values with content and sends them to the api.py that works as the router and manages the dispatch to the databases. The internal values must also be added to the db_helper.py in order to extract the information correctly afterward. This setup will be explained with an example when analysing the sections.
 
 ### 1. Briefing
