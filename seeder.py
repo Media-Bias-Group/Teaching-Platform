@@ -12,9 +12,6 @@ NUM_OF_GROUPS_TOOL = 10
 NUM_OF_GROUPS_ANNOTATION= 9
 
 def seed_personal_questions():
-    # survey_old = Survey.query.filter_by(name='personal_questions').first()
-    # db.session.delete(survey_old)
-    # db.session.commit()
     app = create_app()
     ctx = app.app_context()
     ctx.push()
@@ -65,9 +62,6 @@ def seed_personal_questions():
     db.session.commit()
 
 def seed_ideology_questions():
-    # survey_old = Survey.query.filter_by(name='ideology_questions').first()
-    # db.session.delete(survey_old)
-    # db.session.commit()
     app = create_app()
     ctx = app.app_context()
     ctx.push()
@@ -163,87 +157,102 @@ def seed_iqc_questions():
     db.session.add(survey)
     db.session.commit()
 
-def seed_scientific_research():
+def seed_tool_rating():
     app = create_app()
     ctx = app.app_context()
     ctx.push()
-
     db.init_app(app)
-    survey = Survey(name="scientific_research")
+
+    survey = Survey(name="tool_rating_questions")
     questions = []
 
     # 1
-    question_1 = Question(text='Can we trust your data for scientific research?', type='radio', name='scientific_research')
+    question_1 = Question(
+        text='The Austrian MEP Harald Vilimsky speaks out...',
+        type='quiz_first',
+        name='quiz_first'
+    )
     question_1.simple_choices = [
-        SimpleChoice(text='Yes, you can trust my data for scientific research.'),
-        SimpleChoice(text='No, you may not want to trust my data for scientifc research.')
-    ]
-    questions.append(question_1)
-
-    survey.questions = questions
-    db.session.add(survey)
-    db.session.commit()
-
-def seed_debriefing():
-    app = create_app()
-    ctx = app.app_context()
-    ctx.push()
-
-    db.init_app(app)
-    survey = Survey(name="debriefing")
-    questions = []
-
-    # 1
-    question_1 = Question(text='Please rate how much you liked option 1 (icon array)?', type='radio', name='chart')
-    question_1.simple_choices = [
-        SimpleChoice(text='✩✩✩✩✩'),
-        SimpleChoice(text='✩✩✩✩'),
-        SimpleChoice(text='✩✩✩'),
-        SimpleChoice(text='✩✩'),
-        SimpleChoice(text='✩')
+        SimpleChoice(text='...against firearms.'),
+        SimpleChoice(text='...in favor of firearms.')
     ]
     questions.append(question_1)
 
     # 2
-    question_2 = Question(text='Please rate how much you liked option 2 (annotations with explanations)?', type='radio', name='extended_annotation')
+    question_2 = Question(
+        text='This article speaks out...',
+        type='quiz_second',
+        name='quiz_second'
+    )
     question_2.simple_choices = [
-        SimpleChoice(text='✩✩✩✩✩'),
-        SimpleChoice(text='✩✩✩✩'),
-        SimpleChoice(text='✩✩✩'),
-        SimpleChoice(text='✩✩'),
-        SimpleChoice(text='✩')
+        SimpleChoice(text='...against the NRA.'),
+        SimpleChoice(text='...in favor of NRA.')
     ]
     questions.append(question_2)
 
     # 3
-    question_3 = Question(text='Please rate how much you liked option 3 (annotations)?', type='radio', name='annotation')
+    question_3 = Question(
+        text='Please tell us what you think about following sentence: In my opinion, this article is biased.',
+        type='radio',
+        name='biased_article'
+    )
     question_3.simple_choices = [
-        SimpleChoice(text='✩✩✩✩✩'),
-        SimpleChoice(text='✩✩✩✩'),
-        SimpleChoice(text='✩✩✩'),
-        SimpleChoice(text='✩✩'),
-        SimpleChoice(text='✩')
+        SimpleChoice(text='Strongly disagree'),
+        SimpleChoice(text='Disagree'),
+        SimpleChoice(text='Somewhat disagree'),
+        SimpleChoice(text='Somewhat agree'),
+        SimpleChoice(text='Agree'),
+        SimpleChoice(text='Stronlgy agree')
     ]
     questions.append(question_3)
 
     # 4
-    question_4 = Question(text='Please rate how much you liked option 4 (explanation video)?', type='radio', name='video')
+    question_4 = Question(
+        text='This article is...',
+        type='radio',
+        name='bias_facts'
+    )
     question_4.simple_choices = [
-        SimpleChoice(text='✩✩✩✩✩'),
-        SimpleChoice(text='✩✩✩✩'),
-        SimpleChoice(text='✩✩✩'),
-        SimpleChoice(text='✩✩'),
-        SimpleChoice(text='✩')
+        SimpleChoice(text='Very factual'),
+        SimpleChoice(text='Factual'),
+        SimpleChoice(text='Somewhat factual'),
+        SimpleChoice(text='Somewhat fictious'),
+        SimpleChoice(text='Fictious'),
+        SimpleChoice(text='Very fictious')
     ]
     questions.append(question_4)
 
     # 5
-    question_5 = Question(text='', type='dict', name='dict')
+    question_5 = Question(
+        text='How easy was it for you to detect potentially biased language in this article?',
+        type='radio',
+        name='bias_detection'
+    )
     question_5.simple_choices = [
-        SimpleChoice(text='No')
+        SimpleChoice(text='Very easy'),
+        SimpleChoice(text='Easy'),
+        SimpleChoice(text='Somewhat easy'),
+        SimpleChoice(text='Somewhat difficult'),
+        SimpleChoice(text='Difficult'),
+        SimpleChoice(text='Very difficult')
     ]
     questions.append(question_5)
 
+    # 6
+    question_6 = Question(
+        text='Do you consider this article to be liberal, conservative or somewhere in between?',
+        type='range_slider',
+        name='tool_article_ideology'
+    )
+    question_6.range_slider_choices = [
+        RangeSliderChoice(
+            min_range=-10,
+            max_range=10,
+            label_left_side='Very liberal',
+            label_right_side='Very conservative'
+        )
+    ]
+    questions.append(question_6)
 
     survey.questions = questions
     db.session.add(survey)
@@ -254,9 +263,6 @@ def seed_knowledge_test():
     ctx = app.app_context()
     ctx.push()
     db.init_app(app)
-    # survey_old = Survey.query.filter_by(name='annotation_questions').first()
-    # db.session.delete(survey_old)
-    # db.session.commit()
 
     survey = Survey(name="knowledge_test")
     questions = []
@@ -442,110 +448,90 @@ def seed_knowledge_test():
     db.session.add(survey)
     db.session.commit()
 
-def seed_tool_rating():
+def seed_scientific_research():
     app = create_app()
     ctx = app.app_context()
     ctx.push()
-    db.init_app(app)
-    # survey_old = Survey.query.filter_by(name='annotation_questions').first()
-    # db.session.delete(survey_old)
-    # db.session.commit()
 
-    survey = Survey(name="tool_rating_questions")
+    db.init_app(app)
+    survey = Survey(name="scientific_research")
     questions = []
 
     # 1
-    question_1 = Question(
-        text='The Austrian MEP Harald Vilimsky speaks out...',
-        type='quiz_first',
-        name='quiz_first'
-    )
+    question_1 = Question(text='Can we trust your data for scientific research?', type='radio', name='scientific_research')
     question_1.simple_choices = [
-        SimpleChoice(text='...against firearms.'),
-        SimpleChoice(text='...in favor of firearms.')
+        SimpleChoice(text='Yes, you can trust my data for scientific research.'),
+        SimpleChoice(text='No, you may not want to trust my data for scientifc research.')
     ]
     questions.append(question_1)
-
-    # 2
-    question_2 = Question(
-        text='This article speaks out...',
-        type='quiz_second',
-        name='quiz_second'
-    )
-    question_2.simple_choices = [
-        SimpleChoice(text='...against the NRA.'),
-        SimpleChoice(text='...in favor of NRA.')
-    ]
-    questions.append(question_2)
-
-    # 3
-    question_3 = Question(
-        text='Please tell us what you think about following sentence: In my opinion, this article is biased.',
-        type='radio',
-        name='biased_article'
-    )
-    question_3.simple_choices = [
-        SimpleChoice(text='Strongly disagree'),
-        SimpleChoice(text='Disagree'),
-        SimpleChoice(text='Somewhat disagree'),
-        SimpleChoice(text='Somewhat agree'),
-        SimpleChoice(text='Agree'),
-        SimpleChoice(text='Stronlgy agree')
-    ]
-    questions.append(question_3)
-
-    # 4
-    question_4 = Question(
-        text='This article is...',
-        type='radio',
-        name='bias_facts'
-    )
-    question_4.simple_choices = [
-        SimpleChoice(text='Very factual'),
-        SimpleChoice(text='Factual'),
-        SimpleChoice(text='Somewhat factual'),
-        SimpleChoice(text='Somewhat fictious'),
-        SimpleChoice(text='Fictious'),
-        SimpleChoice(text='Very fictious')
-    ]
-    questions.append(question_4)
-
-    # 5
-    question_5 = Question(
-        text='How easy was it for you to detect potentially biased language in this article?',
-        type='radio',
-        name='bias_detection'
-    )
-    question_5.simple_choices = [
-        SimpleChoice(text='Very easy'),
-        SimpleChoice(text='Easy'),
-        SimpleChoice(text='Somewhat easy'),
-        SimpleChoice(text='Somewhat difficult'),
-        SimpleChoice(text='Difficult'),
-        SimpleChoice(text='Very difficult')
-    ]
-    questions.append(question_5)
-
-    # 6
-    question_6 = Question(
-        text='Do you consider this article to be liberal, conservative or somewhere in between?',
-        type='range_slider',
-        name='tool_article_ideology'
-    )
-    question_6.range_slider_choices = [
-        RangeSliderChoice(
-            min_range=-10,
-            max_range=10,
-            label_left_side='Very liberal',
-            label_right_side='Very conservative'
-        )
-    ]
-    questions.append(question_6)
 
     survey.questions = questions
     db.session.add(survey)
     db.session.commit()
 
+def seed_debriefing():
+    app = create_app()
+    ctx = app.app_context()
+    ctx.push()
+
+    db.init_app(app)
+    survey = Survey(name="debriefing")
+    questions = []
+
+    # 1
+    question_1 = Question(text='Please rate how much you liked option 1 (icon array)?', type='radio', name='chart')
+    question_1.simple_choices = [
+        SimpleChoice(text='✩✩✩✩✩'),
+        SimpleChoice(text='✩✩✩✩'),
+        SimpleChoice(text='✩✩✩'),
+        SimpleChoice(text='✩✩'),
+        SimpleChoice(text='✩')
+    ]
+    questions.append(question_1)
+
+    # 2
+    question_2 = Question(text='Please rate how much you liked option 2 (annotations with explanations)?', type='radio', name='extended_annotation')
+    question_2.simple_choices = [
+        SimpleChoice(text='✩✩✩✩✩'),
+        SimpleChoice(text='✩✩✩✩'),
+        SimpleChoice(text='✩✩✩'),
+        SimpleChoice(text='✩✩'),
+        SimpleChoice(text='✩')
+    ]
+    questions.append(question_2)
+
+    # 3
+    question_3 = Question(text='Please rate how much you liked option 3 (annotations)?', type='radio', name='annotation')
+    question_3.simple_choices = [
+        SimpleChoice(text='✩✩✩✩✩'),
+        SimpleChoice(text='✩✩✩✩'),
+        SimpleChoice(text='✩✩✩'),
+        SimpleChoice(text='✩✩'),
+        SimpleChoice(text='✩')
+    ]
+    questions.append(question_3)
+
+    # 4
+    question_4 = Question(text='Please rate how much you liked option 4 (explanation video)?', type='radio', name='video')
+    question_4.simple_choices = [
+        SimpleChoice(text='✩✩✩✩✩'),
+        SimpleChoice(text='✩✩✩✩'),
+        SimpleChoice(text='✩✩✩'),
+        SimpleChoice(text='✩✩'),
+        SimpleChoice(text='✩')
+    ]
+    questions.append(question_4)
+
+    # 5
+    question_5 = Question(text='', type='dict', name='dict')
+    question_5.simple_choices = [
+        SimpleChoice(text='No')
+    ]
+    questions.append(question_5)
+
+    survey.questions = questions
+    db.session.add(survey)
+    db.session.commit()
 
 def create_groups_for_tool():
     app = create_app()
@@ -570,7 +556,7 @@ def create_groups_for_annotation():
     ctx.pop()
 
 
-def seed_annotation_sentences():
+def seed_tool_articles():
     app = create_app()
     ctx = app.app_context()
     ctx.push()
@@ -591,7 +577,7 @@ def seed_annotation_sentences():
             db.session.commit()
     ctx.pop()
 
-def seed_articles():
+def seed_annotation_articles():
     app = create_app()
     ctx = app.app_context()
     ctx.push()
@@ -622,5 +608,5 @@ if __name__ == '__main__':
     # seed_debriefing()
     # create_groups_for_tool()
     # create_groups_for_annotation()
-    # seed_annotation_sentences()
-     seed_articles()
+    # seed_tool_articles()
+     seed_annotation_articles()
