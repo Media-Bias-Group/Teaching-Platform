@@ -87,6 +87,198 @@ def get_annotation_status(db, ctx, after_date='2000-10-10 00:00:00'):
     print("\n{} results. ".format(count))
     ctx.pop()
 
+def to_csv_briefing(db, ctx, after_date='2000-10-10 00:00:00'):
+    ctx.push()
+    with open('to_csv_briefing_{}.csv'.format(after_date), mode='w') as csv_file:
+        fieldnames = ['id', 'prolific_id', 'created_at', 'age', 'gender', 'education', 'native_english_speaker', 'political_ideology', 'followed_news_outlets', 'news_check_frequency']
+        t = PrettyTable(fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+
+        # First, get all worker status
+        sql_str = """
+            SELECT identifier_key, survey_record_id, survey_record.created_at, COUNT(*) as count
+            FROM survey_annotations
+            INNER JOIN survey_record ON survey_record.id = survey_annotations.survey_record_id
+            WHERE survey_record.created_at > '""" + after_date + """'
+            GROUP BY survey_record_id
+            ORDER BY survey_record.created_at;
+            """
+        sql = text(sql_str)
+        for row in db.session.execute(sql):
+            survey_record_id = dict(row)['survey_record_id']
+
+            # Then, get the detailed records for each id
+            sql_str_2 = """
+                SELECT identifier_key, demographics.created_at, age, gender, education, political_ideology, native_english_speaker, followed_news_outlets, news_check_frequency, demographics.survey_record_id
+                FROM demographics
+                INNER JOIN ideologies on demographics.survey_record_id = ideologies.survey_record_id
+                INNER JOIN survey_record on survey_record.id=ideologies.survey_record_id
+                WHERE survey_record.id = '""" + survey_record_id + """'
+                ;
+                """
+            sql_2 = text(sql_str_2)
+
+            result_2 = db.session.execute(sql_2)
+            for row_2 in result_2:
+                record = dict(row_2)
+                prolific_id = record['identifier_key']
+                created_at = record['created_at']
+                age = record['age']
+                gender = SimpleChoice.query.get(record['gender']).to_dict()['text']
+                education = SimpleChoice.query.get(record['education']).to_dict()['text']
+                native_english_speaker = SimpleChoice.query.get(record['native_english_speaker']).to_dict()['text']
+                political_ideology = record['political_ideology']
+                followed_news_outlets = record['followed_news_outlets'].split(',')
+                converted_news_outlets = []
+                for outlet in followed_news_outlets:
+                    if (outlet.isdigit()):
+                        ot = SimpleChoice.query.get(outlet).to_dict()['text']
+                        converted_news_outlets.append(ot)
+                    else:
+                        converted_news_outlets.append(outlet)
+                news_check_frequency = SimpleChoice.query.get(record['news_check_frequency']).to_dict()['text']
+
+                t.add_row([survey_record_id, prolific_id, created_at, age, gender, education, native_english_speaker, political_ideology, converted_news_outlets, news_check_frequency])
+
+                writer.writerow({
+                    'id': survey_record_id,
+                    'prolific_id': prolific_id,
+                    'created_at' : created_at,
+                    'age': age,
+                    'gender': gender,
+                    'education': education,
+                    'native_english_speaker': native_english_speaker,
+                    'political_ideology': political_ideology,
+                    'followed_news_outlets': converted_news_outlets,
+                    'news_check_frequency': news_check_frequency
+                })
+
+        print('csv generated...')
+        # print(t)
+        ctx.pop()
+
+def to_csv_tool(db, ctx, after_date='2000-10-10 00:00:00'):
+    ctx.push()
+    with open('to_csv_tool_{}.csv'.format(after_date), mode='w') as csv_file:
+        fieldnames = ['id', 'prolific_id', 'created_at', 'group_id', 'quiz_first', 'quiz_second', 'biased_article', 'bias_facts', 'bias_detection', 'tool_article_ideology']
+        t = PrettyTable(fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+
+        # First, get all worker status
+        sql_str = """
+            SELECT identifier_key, survey_record_id, survey_record.created_at, COUNT(*) as count
+            FROM survey_annotations
+            INNER JOIN survey_record ON survey_record.id = survey_annotations.survey_record_id
+            WHERE survey_record.created_at > '""" + after_date + """'
+            GROUP BY survey_record_id
+            ORDER BY survey_record.created_at;
+            """
+        sql = text(sql_str)
+        for row in db.session.execute(sql):
+            survey_record_id = dict(row)['survey_record_id']
+
+            # Then, get the detailed records for each id
+            sql_str_2 = """
+                SELECT identifier_key, created_at, group_id, quiz_first, quiz_second, biased_article, bias_facts, bias_detection, tool_article_ideology, survey_record_id
+                FROM tool
+                INNER JOIN survey_record on survey_record.id=tool.survey_record_id
+                WHERE survey_record.id = '""" + survey_record_id + """'
+                ;
+                """
+            sql_2 = text(sql_str_2)
+
+            result_2 = db.session.execute(sql_2)
+            for row_2 in result_2:
+                record = dict(row_2)
+                prolific_id = record['identifier_key']
+                created_at = record['created_at']
+                group_id = record['group_id']
+                quiz_first = SimpleChoice.query.get(record['quiz_first']).to_dict()['text']
+                quiz_second = SimpleChoice.query.get(record['quiz_second']).to_dict()['text']
+                biased_article = SimpleChoice.query.get(record['biased_article']).to_dict()['text']
+                bias_facts = SimpleChoice.query.get(record['bias_facts']).to_dict()['text']
+                bias_detection = SimpleChoice.query.get(record['bias_detection']).to_dict()['text']
+                tool_article_ideology = record['tool_article_ideology']
+
+                t.add_row([survey_record_id, prolific_id, created_at, group_id, quiz_first, quiz_second, biased_article, bias_facts, bias_detection, tool_article_ideology])
+
+                writer.writerow({
+                    'id': survey_record_id,
+                    'prolific_id': prolific_id,
+                    'created_at' : created_at,
+                    'group_id': group_id,
+                    'biased_article': biased_article,
+                    'bias_facts': bias_facts,
+                    'bias_detection': bias_detection,
+                    'tool_article_ideology': tool_article_ideology,
+                    'quiz_first': quiz_first,
+                    'quiz_second': quiz_second,
+                })
+
+        print('csv generated...')
+        # print(t)
+        ctx.pop()
+
+def to_csv_debriefing(db, ctx, after_date='2000-10-10 00:00:00'):
+    ctx.push()
+    with open('to_csv_debriefing_{}.csv'.format(after_date), mode='w') as csv_file:
+        fieldnames = ['id', 'prolific_id', 'scientific_research', 'chart', 'video', 'annotation', 'extended_annotation']
+        t = PrettyTable(fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+
+        # First, get all worker status
+        sql_str = """
+            SELECT identifier_key, survey_record_id, survey_record.created_at, COUNT(*) as count
+            FROM survey_annotations
+            INNER JOIN survey_record ON survey_record.id = survey_annotations.survey_record_id
+            WHERE survey_record.created_at > '""" + after_date + """'
+            GROUP BY survey_record_id
+            ORDER BY survey_record.created_at;
+            """
+        sql = text(sql_str)
+        for row in db.session.execute(sql):
+            survey_record_id = dict(row)['survey_record_id']
+
+            # Then, get the detailed records for each id
+            sql_str_2 = """
+                SELECT identifier_key, scientific_research, chart, video, annotation, extended_annotation, scientific_research.survey_record_id
+                FROM scientific_research
+                INNER JOIN debriefing on scientific_research.survey_record_id = debriefing.survey_record_id
+                INNER JOIN survey_record on survey_record.id=debriefing.survey_record_id
+                WHERE survey_record.id = '""" + survey_record_id + """'
+                ;
+                """
+            sql_2 = text(sql_str_2)
+
+            result_2 = db.session.execute(sql_2)
+            for row_2 in result_2:
+                record = dict(row_2)
+                prolific_id = record['identifier_key']
+                scientific_research = SimpleChoice.query.get(record['scientific_research']).to_dict()['text']
+                chart = SimpleChoice.query.get(record['chart']).to_dict()['text']
+                video = SimpleChoice.query.get(record['video']).to_dict()['text']
+                annotation = SimpleChoice.query.get(record['annotation']).to_dict()['text']
+                extended_annotation = SimpleChoice.query.get(record['extended_annotation']).to_dict()['text']
+
+                t.add_row([survey_record_id, prolific_id, scientific_research, chart, video, annotation, extended_annotation])
+
+                writer.writerow({
+                    'id': survey_record_id,
+                    'prolific_id': prolific_id,
+                    'scientific_research': scientific_research,
+                    'chart': chart,
+                    'video': video,
+                    'annotation': annotation,
+                    'extended_annotation': extended_annotation
+                })
+
+        print('csv generated...')
+        # print(t)
+        ctx.pop()
+
 def to_csv_survey_worker_records(db, ctx, after_date='2000-10-10 00:00:00'):
     ctx.push()
     with open('detailed_user_record_mturk_{}.csv'.format(after_date), mode='w') as csv_file:
